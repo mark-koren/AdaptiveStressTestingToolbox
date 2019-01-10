@@ -1,0 +1,7 @@
+--exp_name
+crosswalk
+--iters
+501
+--batch_size
+4000
+

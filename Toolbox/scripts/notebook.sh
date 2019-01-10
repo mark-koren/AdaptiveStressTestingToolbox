@@ -1,0 +1,6 @@
+source /home/mark/miniconda2/bin/activate AST
+cd ..
+unset PYTHONPATH
+export PYTHONPATH=$(pwd):$(pwd)/garage:$PYTHONPATH
+cd ..
+jupyter notebook
