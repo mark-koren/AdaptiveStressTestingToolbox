@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 filepath = './data/lr_64/'
-filenames = ['l1/tab.txt', 'l2/tab.txt', 'l3/tab.txt', 'l4/tab.txt', 'l5/tab.txt', 'l6/tab.txt']
+filenames = ['l1/tab.txt', 'l2/tab.txt', 'l3/tab.txt', 'l4/tab.txt', 'l5/tab.txt', 'l6/tab.txt', 'l7/tab.txt', 'l8/tab.txt', 'l9/tab.txt']
 ax = None
 for f in filenames:
     data = pd.read_csv(filepath + f)
