@@ -3,8 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-filepath = './data/gen/'
-filenames = ['g1/tab.txt', 'g2/tab.txt', 'g3/tab.txt', 'g4/tab.txt', 'g5/tab.txt', 'g6/tab.txt']
+filepath = './data/lr_64/'
+filenames = ['l1/tab.txt', 'l2/tab.txt', 'l3/tab.txt', 'l4/tab.txt', 'l5/tab.txt', 'l6/tab.txt']
 ax = None
 for f in filenames:
     data = pd.read_csv(filepath + f)
