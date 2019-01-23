@@ -1,7 +1,15 @@
 --exp_name
 crosswalk
 --iters
-501
+1001
 --batch_size
-4000
+50000
+--step_size
+1.0
+--hidden_dim
+64
+--use_peepholes
+True
+--fixed_init_state
+False
 

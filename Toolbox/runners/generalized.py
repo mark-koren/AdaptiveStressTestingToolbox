@@ -39,7 +39,7 @@ parser.add_argument('--args_data', type=str, default=None)
 #Algo Params
 parser.add_argument('--iters', type=int, default=101)
 parser.add_argument('--batch_size', type=int, default=4000)
-parser.add_argument('--step_size', type=float, default=0.3)
+parser.add_argument('--clip_range', type=float, default=0.3)
 
 
 # Policy Params
@@ -54,7 +54,7 @@ parser.add_argument('--fixed_init_state', type=bool, default=False)
 
 # Parse input args
 args = parser.parse_args()
-
+print(args.fixed_init_state)
 # Create the logger
 log_dir = args.log_dir
 
@@ -112,7 +112,7 @@ algo = TRPO(
     policy=policy,
     baseline=LinearFeatureBaseline(env_spec=env.spec),
     batch_size=args.batch_size,
-    step_size=args.step_size,
+    clip_range=args.clip_range,
     n_itr=args.iters,
     store_paths=True,
     optimizer=optimizer,
