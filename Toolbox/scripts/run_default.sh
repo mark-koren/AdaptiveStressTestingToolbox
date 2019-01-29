@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source /home/mkoren/miniconda2/bin/activate AST
+source ~/miniconda2/bin/activate AST
 cd ../..
 unset PYTHONPATH
 #export PYTHONPATH=$(pwd):$(pwd)/rltools:$(pwd)/garage:$PYTHONPATH

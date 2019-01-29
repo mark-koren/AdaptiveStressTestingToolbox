@@ -1,15 +1,15 @@
 --exp_name
 crosswalk
 --iters
-1001
+501
 --batch_size
 50000
---step_size
+--clip_range
 1.0
 --hidden_dim
 64
 --use_peepholes
 True
---fixed_init_state
-False
+--snapsot_gap
+500
 

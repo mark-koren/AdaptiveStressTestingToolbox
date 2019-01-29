@@ -3,29 +3,33 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-filepath = './data/lr_64/'
-filenames = ['l1/tab.txt', 'l2/tab.txt', 'l3/tab.txt', 'l4/tab.txt', 'l5/tab.txt', 'l6/tab.txt']
+filepath = './data/newR/'
+filenames = ['r1/tab.txt', 'r2/tab.txt', 'r3/tab.txt', 'r4/tab.txt', 'r5/tab.txt', 'r6/tab.txt', 'r7/tab.txt', 'r8/tab.txt', 'r9/tab.txt']
 ax = None
 for f in filenames:
     data = pd.read_csv(filepath + f)
     d_cumMaxAvg = data.assign(CumAvgReturn=data['AverageReturn'].cummax())
-    ax = d_cumMaxAvg.plot('Iteration','CumAvgReturn', ax=ax, legend=filenames)
+    ax = d_cumMaxAvg.plot('Iteration','CumAvgReturn', ax=ax, legend=True)
+ax.legend(filenames)
 plt.show()
 ax = None
 for f in filenames:
     data = pd.read_csv(filepath + f)
     d_cumMaxMax = data.assign(CumMaxReturn=data['MaxReturn'].cummax())
-    ax = d_cumMaxMax.plot('Iteration','CumMaxReturn', ax=ax, legend=filenames)
+    ax = d_cumMaxMax.plot('Iteration','CumMaxReturn', ax=ax, legend=True)
+ax.legend(filenames)
 plt.show()
 ax = None
 for f in filenames:
     data = pd.read_csv(filepath + f)
-    ax = data.plot('Iteration','AverageReturn', ax=ax, legend=filenames)
+    ax = data.plot('Iteration','AverageReturn', ax=ax, legend=True)
+ax.legend(filenames)
 plt.show()
 ax = None
 for f in filenames:
     data = pd.read_csv(filepath + f)
-    ax = data.plot('Iteration','MaxReturn', ax=ax, legend=filenames)
+    ax = data.plot('Iteration','MaxReturn', ax=ax, legend=True)
+ax.legend(filenames)
 plt.show()
 
 
