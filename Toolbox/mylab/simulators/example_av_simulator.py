@@ -23,7 +23,7 @@ class ExampleAVSimulator(ASTSimulator):
                  d_max = 9.0,
                  min_dist_x = 2.5,
                  min_dist_y = 1.4,
-                 car_init_x = 35.0,
+                 car_init_x = -35.0,
                  car_init_y = 0.0,
                  action_only = True,
                  **kwargs):
