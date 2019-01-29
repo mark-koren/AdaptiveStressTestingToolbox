@@ -19,7 +19,7 @@ class ExampleAVSpaces(ASTSpaces):
                  y_v_low=-10.0,
                  x_v_high=10.0,
                  y_v_high=10.0,
-                 car_init_x=35.0,
+                 car_init_x=-35.0,
                  car_init_y=0.0,
                  action_only = True,
                  ):
