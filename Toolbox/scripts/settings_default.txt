@@ -1,7 +1,7 @@
 --exp_name
 crosswalk
 --iters
-501
+97
 --batch_size
 50000
 --clip_range
@@ -10,6 +10,10 @@ crosswalk
 64
 --use_peepholes
 True
---snapsot_gap
-500
+--snapshot_gap
+16
+--fixed_init_state
+True
+--run_num
+0
 
