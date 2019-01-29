@@ -52,6 +52,8 @@ parser.add_argument('--load_policy', type=bool, default=False)
 parser.add_argument('--action_only', type=bool, default=True)
 parser.add_argument('--fixed_init_state', type=bool, default=False)
 
+parser.add_argument('--run_num', type=int, default=0)
+
 # Parse input args
 args = parser.parse_args()
 print(args.fixed_init_state)
@@ -80,14 +82,27 @@ sim = ExampleAVSimulator()
 reward_function = ExampleAVReward()
 spaces = ExampleAVSpaces()
 
+x = [-2.125,-4.625]
+y = [-0.5, 0.5]
+vp = [0.5, 1.5]
+vc = [9.755, 12.315]
+xc = [-30.625, -39.375]
+
+s_0 = [ x[np.mod(args.run_num,2)],
+        y[np.mod(args.run_num//2, 2)],
+        vp[np.mod(args.run_num//4, 2)],
+        vc[np.mod(args.run_num//8, 2)],
+        xc[np.mod(args.run_num//16, 2)]]
+print(s_0)
 # Create the environment
 env = ASTEnv(action_only=args.action_only,
              fixed_init_state=args.fixed_init_state,
-             s_0=[-0.0, -2.5, 1.0, 11.17, -35.0],
+             s_0=s_0,
              simulator=sim,
              reward_function=reward_function,
              spaces=spaces
              )
+
 # env = GarageEnv(env)
 env = normalize(env)
 env = TfEnv(env)
