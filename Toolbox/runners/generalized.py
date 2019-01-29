@@ -89,10 +89,10 @@ vc = [9.755, 12.315]
 xc = [-30.625, -39.375]
 
 s_0 = [ x[np.mod(args.run_num,2)],
-        x[np.mod(args.run_num//2, 2)],
-        x[np.mod(args.run_num//4, 2)],
-        x[np.mod(args.run_num//8, 2)],
-        x[np.mod(args.run_num//16, 2)]]
+        y[np.mod(args.run_num//2, 2)],
+        vp[np.mod(args.run_num//4, 2)],
+        vc[np.mod(args.run_num//8, 2)],
+        xc[np.mod(args.run_num//16, 2)]]
 print(s_0)
 # Create the environment
 env = ASTEnv(action_only=args.action_only,
