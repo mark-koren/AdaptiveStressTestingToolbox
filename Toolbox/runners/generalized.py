@@ -82,8 +82,8 @@ sim = ExampleAVSimulator()
 reward_function = ExampleAVReward()
 spaces = ExampleAVSpaces()
 
-x = [-2.125,-4.625]
-y = [-0.5, 0.5]
+y = [-2.125,-4.625]
+x = [-0.5, 0.5]
 vp = [0.5, 1.5]
 vc = [9.755, 12.315]
 xc = [-30.625, -39.375]
