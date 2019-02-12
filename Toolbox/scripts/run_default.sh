@@ -28,8 +28,8 @@ for run_name in "$@"; do
     args="$args $line"
     echo "Text read from file: $line"
   done < "$path/$run_name/$run_name.txt"
-  echo "python ../runners/$runner $args"
-  python ../runners/$runner $args --log_dir $path/$run_name
+  echo "python ../../Tests/$runner $args"
+  python ../../Tests/$runner $args --log_dir $path/$run_name
   mkdir -p ~/box/Research/Data/DRL-AST/$group/$run_name
   cp -a $path/$run_name/. ~/box/Research/Data/DRL-AST/$group/$run_name/ &>/dev/null &
 done
