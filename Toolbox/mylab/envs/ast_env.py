@@ -82,7 +82,7 @@ class ASTEnv(gym.Env, Serializable):
         done : a boolean, indicating whether the episode has ended
         info : a dictionary containing other diagnostic information from the previous action
         """
-        self._action = action
+        self._action = np.clip(action, self.spaces.action_space.low, self.spaces.action_space.high)
         self._actions.append(action)
         # Update simulation step
         obs = self.simulator.step(self._action)
@@ -109,7 +109,9 @@ class ASTEnv(gym.Env, Serializable):
     def simulate(self, actions):
         if not self._fixed_init_state:
             self._init_state = self.observation_space.sample()
-        self.simulator.simulate(actions, self._init_state)
+        self.simulator.simulate(
+            np.clip(actions, self.spaces.action_space.low, self.spaces.action_space.high)
+            , self._init_state)
 
     def reset(self):
         """
