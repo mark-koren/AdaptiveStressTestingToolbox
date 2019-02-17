@@ -22,11 +22,17 @@ class TRPO(NPO):
     """
 
     def __init__(self,
+                 step_size=0.1,
+                 top_paths=None,
                  kl_constraint=KLConstraint.HARD,
                  optimizer=None,
                  optimizer_args=None,
-                 top_paths=None,
                  **kwargs):
+        """
+        :param step_size: the constraint on the KL divergence of each update
+        :param top_paths: a bounded priority queue to store top-rewarded trajectories
+        :return: No return value.
+        """
         if not optimizer:
             if kl_constraint == KLConstraint.HARD:
                 optimizer = ConjugateGradientOptimizer
@@ -44,6 +50,7 @@ class TRPO(NPO):
             optimizer=optimizer,
             optimizer_args=optimizer_args,
             name="TRPO",
+            clip_range=step_size,
             **kwargs)
 
     @overrides

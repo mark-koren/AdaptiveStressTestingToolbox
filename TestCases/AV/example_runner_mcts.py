@@ -6,13 +6,12 @@ from mylab.spaces.example_av_spaces import ExampleAVSpaces
 # Import the AST classes
 from mylab.envs.ast_env import ASTEnv
 from mylab.samplers.ast_vectorized_sampler import ASTVectorizedSampler
+from mylab.algos.mcts import MCTS
 
 # Import the necessary garage classes
 from garage.tf.algos.trpo import TRPO
 from garage.tf.envs.base import TfEnv
-from garage.tf.envs.base import GarageEnv
 from garage.tf.policies.gaussian_lstm_policy import GaussianLSTMPolicy
-from mylab.algos.psmcts import PSMCTS
 from garage.tf.optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer, FiniteDifferenceHvp
 from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
 from garage.envs.normalized_env import normalize
@@ -23,7 +22,6 @@ import os.path as osp
 import argparse
 from example_save_trials import *
 import tensorflow as tf
-import pdb
 
 # Logger Params
 parser = argparse.ArgumentParser()
@@ -36,13 +34,11 @@ parser.add_argument('--snapshot_gap', type=int, default=10)
 parser.add_argument('--log_tabular_only', type=bool, default=False)
 parser.add_argument('--log_dir', type=str, default='.')
 parser.add_argument('--args_data', type=str, default=None)
+parser.add_argument('--run_num', type=int, default=0)
 
-#Algo Params
 parser.add_argument('--iters', type=int, default=101)
 parser.add_argument('--batch_size', type=int, default=4000)
 parser.add_argument('--clip_range', type=float, default=0.3)
-
-
 # Policy Params
 parser.add_argument('--hidden_dim', type=int, default=64)
 parser.add_argument('--policy', type=str, default="LSTM")
@@ -52,20 +48,14 @@ parser.add_argument('--load_policy', type=bool, default=False)
 # Env Params
 parser.add_argument('--action_only', type=bool, default=True)
 parser.add_argument('--fixed_init_state', type=bool, default=False)
-
-parser.add_argument('--run_num', type=int, default=0)
-
-# Parse input args
 args = parser.parse_args()
-print(args.fixed_init_state)
+
 # Create the logger
 log_dir = args.log_dir
 
 tabular_log_file = osp.join(log_dir, args.tabular_log_file)
 text_log_file = osp.join(log_dir, args.text_log_file)
 params_log_file = osp.join(log_dir, args.params_log_file)
-
-# logger = Logger()
 
 logger.log_parameters_lite(params_log_file, args)
 logger.add_text_output(text_log_file)
@@ -83,6 +73,13 @@ sim = ExampleAVSimulator()
 reward_function = ExampleAVReward()
 spaces = ExampleAVSpaces()
 
+# Create the environment
+
+seed = 0
+top_k = 10
+
+import mylab.mcts.BoundedPriorityQueues as BPQ
+top_paths = BPQ.BoundedPriorityQueue(top_k)
 y = [-2.125,-4.625]
 x = [-0.5, 0.5]
 vp = [0.5, 1.5]
@@ -95,78 +92,28 @@ s_0 = [ x[np.mod(args.run_num,2)],
         vc[np.mod(args.run_num//8, 2)],
         xc[np.mod(args.run_num//16, 2)]]
 print(s_0)
-# Create the environment
-env = ASTEnv(action_only=args.action_only,
-             fixed_init_state=args.fixed_init_state,
-             s_0=s_0,
-             simulator=sim,
-             reward_function=reward_function,
-             spaces=spaces
-             )
+env = normalize(ASTEnv(action_only=True,
+                             fixed_init_state=True,
+                             s_0=s_0,
+                             simulator=sim,
+                             reward_function=reward_function,
+                             spaces=spaces
+                             ))
+algo = MCTS(
+	    env=env,
+		stress_test_num=2,
+		max_path_length=100,
+		ec=100.0,
+		n_itr=int(args.iters*args.batch_size/100**2),
+		k=0.5,
+		alpha=0.85,
+		clear_nodes=True,
+		log_interval=1000,
+	    top_paths=top_paths,
+	    plot_tree=False,
+	    plot_path=args.log_dir+'/tree'
+	    )
 
-# env = GarageEnv(env)
-env = normalize(env)
-env = TfEnv(env)
-# pdb.set_trace()
-print("Number of policy parameters: ",
-      4*(args.hidden_dim**2 + args.hidden_dim*(
-          env.action_space.flat_dim +
-          env.observation_space.flat_dim) +
-         args.hidden_dim))
-# Instantiate the garage objects
-policy = GaussianLSTMPolicy(name='lstm_policy',
-                            env_spec=env.spec,
-                            hidden_dim=args.hidden_dim,
-                            use_peepholes=args.use_peepholes)
-
-baseline = LinearFeatureBaseline(env_spec=env.spec)
-optimizer = ConjugateGradientOptimizer
-optimizer_args = {'hvp_approach':FiniteDifferenceHvp(base_eps=1e-5)}
-sampler_cls = ASTVectorizedSampler
-algo = TRPO(
-    env=env,
-    policy=policy,
-    baseline=LinearFeatureBaseline(env_spec=env.spec),
-    batch_size=args.batch_size,
-    clip_range=args.clip_range,
-    n_itr=args.iters,
-    store_paths=True,
-    optimizer=optimizer,
-    optimizer_args=optimizer_args,
-    max_path_length=50,
-    sampler_cls=sampler_cls,
-    sampler_args={"sim": sim,
-                  "reward_function": reward_function})
-
-saver = tf.train.Saver()
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-with tf.Session(config=config) as sess:
-    with tf.variable_scope('AST', reuse=tf.AUTO_REUSE):
-        # Run the experiment
-        algo.train(sess=sess)
-        save_path = saver.save(sess, log_dir + '/model.ckpt')
-        print("Model saved in path: %s" % save_path)
-
-        # Write out the episode results
-        header = 'trial, step, ' + 'v_x_car, v_y_car, x_car, y_car, '
-        for i in range(0,sim.c_num_peds):
-            header += 'v_x_ped_' + str(i) + ','
-            header += 'v_y_ped_' + str(i) + ','
-            header += 'x_ped_' + str(i) + ','
-            header += 'y_ped_' + str(i) + ','
-
-        for i in range(0,sim.c_num_peds):
-            header += 'a_x_'  + str(i) + ','
-            header += 'a_y_' + str(i) + ','
-            header += 'noise_v_x_' + str(i) + ','
-            header += 'noise_v_y_' + str(i) + ','
-            header += 'noise_x_' + str(i) + ','
-            header += 'noise_y_' + str(i) + ','
-
-        header += 'reward'
-        if args.snapshot_mode != "gap":
-            args.snapshot_gap = args.iters - 1
-        example_save_trials(algo.n_itr, args.log_dir, header, sess, save_every_n=args.snapshot_gap)
+algo.train()
 
 
