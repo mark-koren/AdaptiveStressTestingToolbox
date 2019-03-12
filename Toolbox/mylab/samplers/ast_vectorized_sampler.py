@@ -34,7 +34,7 @@ class ASTVectorizedSampler(OnPolicyVectorizedSampler):
                     # pdb.set_trace()
                     self.slice_dict(path, end_idx)
                 rewards = self.reward_function.give_reward(
-                    action = path["actions"][end_idx],
+                    action = actions[end_idx],
                     info = self.sim.get_reward_info()
                 )
                 # pdb.set_trace()

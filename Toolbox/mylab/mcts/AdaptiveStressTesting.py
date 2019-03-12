@@ -19,6 +19,8 @@ class AdaptiveStressTest:
 		self.step_count = 0
 		self._isterminal = False
 		self._reward = 0.0
+		self.action_seq = []
+		self.trajectory_reward = 0.0
 		self.top_paths = top_paths
 
 	def reset_setp_count(self):
@@ -26,12 +28,20 @@ class AdaptiveStressTest:
 	def initialize(self):
 		self._isterminal = False
 		self._reward = 0.0
+		self.action_seq = []
+		self.trajectory_reward = 0.0
 		return self.env.reset()
 	def update(self,action):
 		self.step_count += 1
+		# print("step_count: ",self.step_count)
 		obs, reward, done, info = self.env.step(action.get())
+		# print("step: ",obs, reward, done)
 		self._isterminal = done
 		self._reward = reward
+		self.action_seq.append(action)
+		self.trajectory_reward += reward
+		if done:
+			self.top_paths.enqueue(self.action_seq,self.trajectory_reward,make_copy=True)
 		if self.params.log_tabular:
 			if self.step_count%self.params.log_interval == 0:
 				logger.log(' ')
@@ -45,6 +55,9 @@ class AdaptiveStressTest:
 	def get_reward(self):
 		return self._reward
 	def random_action(self):
+		# action = self.env.action_space.sample()
+		# print('action: ',action)
+		# return ASTAction(action)
 		return ASTAction(self.env.action_space.sample())
 	def explore_action(self,s,tree):
 		return ASTAction(self.env.action_space.sample())
@@ -70,6 +83,7 @@ class AdaptiveStressTest:
 		def go_to_state(target_state):
 			s = get_initial_state()
 			actions = get_action_sequence(target_state)
+			# print("go to state with actions: ",actions)
 			R = 0.0
 			for a in actions:
 				s,r = get_next_state(s, a)
@@ -79,16 +93,16 @@ class AdaptiveStressTest:
 		return MDP.TransitionModel(get_initial_state, get_next_state, isterminal, self.params.max_steps, go_to_state)
 
 class ASTState:
-	def __init__(self,t_index,hash,parent,action):
+	def __init__(self,t_index,s_hash,parent,action):
 		self.t_index = t_index
-		self.hash = hash
+		self.s_hash = s_hash
 		self.parent = parent
 		self.action = action
 	def __hash__(self):
 		if self.parent is None:
 			return hash((self.t_index,None,hash(self.action)))
 		else:
-			return hash((self.t_index,self.parent.hash,hash(self.action)))
+			return hash((self.t_index,self.parent.s_hash,hash(self.action)))
 	def __eq__(self,other):
 		return hash(self) == hash(other)
 

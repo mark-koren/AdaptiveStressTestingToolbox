@@ -18,6 +18,8 @@ class NNSUTSimulator(ASTSimulator):
         self.env = env
         self.sut = sut
         self.path_length = 0
+        
+        self._is_terminal = False
         super().__init__(**kwargs)
 
     def simulate(self, actions, s_0):
@@ -123,10 +125,10 @@ class NNSUTSimulator(ASTSimulator):
         return self.env.ast_action_space
 
     def vec_env_executor(self, n_envs, max_path_length, reward_function,
-                            sample_init_state, init_state, open_loop):
+                            fixed_init_state, init_state, open_loop):
         envs = [pickle.loads(pickle.dumps(self.env)) for _ in range(n_envs)]
         return InnerVecEnvExecutor(envs, self.sut, reward_function,
-                    sample_init_state, init_state,
+                    fixed_init_state, init_state,
                     max_path_length, open_loop)
 
 class InnerVecEnvExecutor(object):

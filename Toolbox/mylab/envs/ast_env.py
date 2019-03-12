@@ -9,7 +9,6 @@ from garage.tf.spaces import Discrete
 from garage.tf.spaces import Tuple
 
 from gym.spaces import Box as GymBox
-from gym.spaces import Dict as GymDict
 from gym.spaces import Discrete as GymDiscrete
 from gym.spaces import Tuple as GymTuple
 
@@ -189,4 +188,3 @@ class ASTEnv(gym.Env, Serializable):
         return EnvSpec(
             observation_space=self.observation_space,
             action_space=self.action_space)
-
