@@ -48,6 +48,12 @@ parser.add_argument('--load_policy', type=bool, default=False)
 # Env Params
 parser.add_argument('--action_only', type=bool, default=True)
 parser.add_argument('--fixed_init_state', type=bool, default=False)
+
+# MCTS Params
+parser.add_argument('--alpha', type=float, default=0.85)
+parser.add_argument('--k', type=float, default=0.5)
+parser.add_argument('--ec', type=float, default=100.0)
+
 args = parser.parse_args()
 
 # Create the logger
@@ -92,6 +98,7 @@ s_0 = [ x[np.mod(args.run_num,2)],
         vc[np.mod(args.run_num//8, 2)],
         xc[np.mod(args.run_num//16, 2)]]
 print(s_0)
+s_0=[-0.0, -2000.0, 1.0, 14.17, -35.0]
 env = normalize(ASTEnv(action_only=True,
                              fixed_init_state=True,
                              s_0=s_0,
@@ -101,12 +108,12 @@ env = normalize(ASTEnv(action_only=True,
                              ))
 algo = MCTS(
 	    env=env,
-		stress_test_num=2,
-		max_path_length=100,
-		ec=100.0,
+		stress_test_num=1,
+		max_path_length=50,
+		ec=args.ec,
 		n_itr=int(args.iters*args.batch_size/100**2),
-		k=0.5,
-		alpha=0.85,
+		k=args.k,
+		alpha=args.alpha,
 		clear_nodes=True,
 		log_interval=1000,
 	    top_paths=top_paths,

@@ -28,7 +28,7 @@ class ASTVectorizedSampler(OnPolicyVectorizedSampler):
         if self.open_loop:
             for path in paths:
                 s_0 = path["observations"][0]
-                actions = path["actions"]
+                actions = path['env_infos']['info']['actions']
                 end_idx, info = self.sim.simulate(actions = actions, s_0 = s_0)
                 if end_idx >= 0:
                     # pdb.set_trace()

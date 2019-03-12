@@ -1,7 +1,7 @@
 --exp_name
 crosswalk
 --iters
-97
+5
 --batch_size
 50000
 --clip_range
@@ -16,4 +16,9 @@ True
 True
 --run_num
 0
-
+--alpha
+0.85
+--k
+0.5
+--ec
+10.0

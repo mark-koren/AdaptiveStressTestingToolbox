@@ -104,7 +104,7 @@ class ASTEnv(gym.Env, Serializable):
         return Step(observation=obs,
                     reward=self._reward,
                     done=self._done,
-                    info={'cache': self._info})
+                    info={'cache': self._info, 'actions': self._action})
 
     def simulate(self, actions):
         if not self._fixed_init_state:

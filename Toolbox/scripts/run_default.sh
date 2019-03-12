@@ -34,4 +34,4 @@ for run_name in "$@"; do
   cp -a $path/$run_name/. ~/box/Research/Data/DRL-AST/$group/$run_name/ &>/dev/null &
 done
 
-source /home/mark/miniconda2/bin/deactivate
+source ~/miniconda2/bin/deactivate
