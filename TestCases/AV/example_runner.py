@@ -118,11 +118,8 @@ with tf.Session(config=config) as sess:
             header += 'noise_y_' + str(i) + ','
 
         header += 'reward'
-<<<<<<< HEAD
-=======
         if args.snapshot_mode != "gap":
             args.snapshot_gap = args.iters - 1
->>>>>>> upstream/master
         example_save_trials(algo.n_itr, args.log_dir, header, sess, save_every_n=args.snapshot_gap)
 
 
