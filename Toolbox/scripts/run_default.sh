@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ~/miniconda2/bin/activate AST
+source activate AST
 cd ../..
 unset PYTHONPATH
 #export PYTHONPATH=$(pwd):$(pwd)/rltools:$(pwd)/garage:$PYTHONPATH
@@ -34,4 +34,4 @@ for run_name in "$@"; do
   cp -a $path/$run_name/. ~/box/Research/Data/DRL-AST/$group/$run_name/ &>/dev/null &
 done
 
-source ~/miniconda2/bin/deactivate
+source deactivate
