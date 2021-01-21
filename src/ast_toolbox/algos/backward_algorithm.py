@@ -1,6 +1,6 @@
 import itertools
 import numpy as np
-from dowel import logger
+from dowel import logger, tabular
 from garage.tf.algos.ppo import PPO
 import pdb
 
@@ -209,7 +209,7 @@ class BackwardAlgorithm(PPO):
         max_reward = -np.inf
         max_reward_step = -1
         max_final_reward = -np.inf
-        expert_trajectory_reward = np.sum(np.array([step['reward'] for step in self.expert_trajectory]))
+        self.expert_trajectory_reward = np.sum(np.array([step['reward'] for step in self.expert_trajectory]))
 
         full_paths = []
         runner.train_args.n_epochs = self.max_epochs
@@ -257,13 +257,13 @@ class BackwardAlgorithm(PPO):
                     max_final_reward = np.sum(path['rewards'])
 
             # We have beat the expert trajectory from this step, back up or end
-            if max_reward_this_step >= expert_trajectory_reward:
+            if max_reward_this_step >= self.expert_trajectory_reward:
                 if self.step_num == 0:
                     self.done = True
                 else:
                     self.done_with_step = True
 
-        print('Backward Results -- Expert Trajectory Reward: ', expert_trajectory_reward, ' -- Best Reward at step ',
+        print('Backward Results -- Expert Trajectory Reward: ', self.expert_trajectory_reward, ' -- Best Reward at step ',
               max_reward_step, ': ', max_reward, " -- Best Final Reward: ", max_final_reward)
         return full_paths
 
@@ -274,6 +274,11 @@ class BackwardAlgorithm(PPO):
         except:
             import pdb;
             pdb.set_trace()
+        finally:
+            tabular.record('ExpertTrajectoryStep', self.step_num)
+            tabular.record('BAPathLength', self.expert_trajectory_last_step - self.step_num + 1)
+            tabular.record('EpochsPerStep', self.epochs_per_this_step)
+            tabular.record('ExpertTrajectoryReward', self.expert_trajectory_reward)
 
         self.log_diagnostics(paths)
         logger.log('Optimizing policy...')
@@ -285,7 +290,7 @@ class BackwardAlgorithm(PPO):
         try:
             iteration_num = self.first_iteration_num
             self.step_num = self.first_step_num
-            epochs_per_this_step = 0
+            self.epochs_per_this_step = 0
             self.done = False
             self.set_env_to_expert_trajectory_step()
             self.done_with_step = False
@@ -295,15 +300,15 @@ class BackwardAlgorithm(PPO):
                 yield (runner.step_itr, runner.obtain_samples(runner.step_itr))
 
                 runner.step_itr += 1
-                epochs_per_this_step += 1
+                self.epochs_per_this_step += 1
 
                 if (not self.done and
-                    (self.done_with_step or epochs_per_this_step == self.max_epochs_per_step)):
+                    (self.done_with_step or self.epochs_per_this_step == self.max_epochs_per_step)):
                     if self.step_num == 0:
                         self.done = True
                     else:
                         # Back up the algorithm to the next step of the expert trajectory
-                        epochs_per_this_step = 0
+                        self.epochs_per_this_step = 0
                         print('------------ Backward Algorithm: Stepping Back from Step: ', self.step_num, ' to Step: ',
                               np.maximum(0, self.expert_trajectory_last_step - np.minimum(iteration_num + 1, self.num_steps - 1)), ' ------------------')
                         iteration_num = np.minimum(iteration_num + 1, self.num_steps - 1)

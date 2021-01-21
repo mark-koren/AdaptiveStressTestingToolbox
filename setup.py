@@ -38,6 +38,8 @@ REQUIRED = ['garage==2019.10.1',
             'depq',
             'compress_pickle',
             'pydot',
+            'hickle',
+            'tqdm',
             ]
 
 # Dependencies for optional features
