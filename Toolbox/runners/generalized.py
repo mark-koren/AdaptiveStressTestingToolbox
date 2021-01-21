@@ -12,6 +12,7 @@ from garage.tf.algos.trpo import TRPO
 from garage.tf.envs.base import TfEnv
 from garage.tf.envs.base import GarageEnv
 from garage.tf.policies.gaussian_lstm_policy import GaussianLSTMPolicy
+from mylab.algos.psmcts import PSMCTS
 from garage.tf.optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer, FiniteDifferenceHvp
 from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
 from garage.envs.normalized_env import normalize

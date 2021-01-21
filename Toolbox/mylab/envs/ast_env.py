@@ -9,7 +9,6 @@ from garage.tf.spaces import Discrete
 from garage.tf.spaces import Tuple
 
 from gym.spaces import Box as GymBox
-from gym.spaces import Dict as GymDict
 from gym.spaces import Discrete as GymDiscrete
 from gym.spaces import Tuple as GymTuple
 
@@ -88,23 +87,21 @@ class ASTEnv(gym.Env, Serializable):
         obs = self.simulator.step(self._action)
         if (obs is None) or (self.open_loop is True):
             obs = self._init_state
-        if self.simulator.is_goal():
+        # if self.simulator.is_goal():
+        if self.simulator.isterminal():
             self._done = True
         # Calculate the reward for this step
         self._reward = self.reward_function.give_reward(
             action=self._action,
             info=self.simulator.get_reward_info())
         # Update instance attributes
-        # self.log()
-        # if self._step == self.c_max_path_length - 1:
-        #     # pdb.set_trace()
-        #     self.simulator.simulate(self._actions)
         self._step = self._step + 1
 
         return Step(observation=obs,
                     reward=self._reward,
                     done=self._done,
-                    info={'cache': self._info})
+                    info={'cache': self._info,
+                          'actions': self._action})
 
     def simulate(self, actions):
         if not self._fixed_init_state:
@@ -127,6 +124,7 @@ class ASTEnv(gym.Env, Serializable):
         self._action = None
         self._actions = []
         self._first_step = True
+        self._step = 0
 
         return self.simulator.reset(self._init_state)
 
@@ -136,7 +134,8 @@ class ASTEnv(gym.Env, Serializable):
         Returns a Space object
         """
         if self.spaces is None:
-            return self._to_garage_space(self.simulator.action_space)
+            # return self._to_garage_space(self.simulator.action_space)
+            return self.simulator.action_space
         else:
             return self.spaces.action_space
 
@@ -146,7 +145,8 @@ class ASTEnv(gym.Env, Serializable):
         Returns a Space object
         """
         if self.spaces is None:
-            return self._to_garage_space(self.simulator.observation_space)
+            # return self._to_garage_space(self.simulator.observation_space)
+            return self.simulator.observation_space
         else:
             return self.spaces.observation_space
 
@@ -188,22 +188,3 @@ class ASTEnv(gym.Env, Serializable):
         return EnvSpec(
             observation_space=self.observation_space,
             action_space=self.action_space)
-
-    @overrides
-    def _to_garage_space(self, space):
-        """
-        Converts a gym.space to a garage.tf.space.
-
-        Returns:
-            space (garage.tf.spaces)
-        """
-        if isinstance(space, GymBox):
-            return Box(low=space.low, high=space.high)
-        elif isinstance(space, GymDict):
-            return Dict(space.spaces)
-        elif isinstance(space, GymDiscrete):
-            return Discrete(space.n)
-        elif isinstance(space, GymTuple):
-            return Tuple(list(map(self._to_garage_space, space.spaces)))
-        else:
-            return space
