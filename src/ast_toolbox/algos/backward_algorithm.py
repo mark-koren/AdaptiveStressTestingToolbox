@@ -285,8 +285,8 @@ class BackwardAlgorithm(PPO):
             tabular.record('EpochsPerStep', self.epochs_per_this_step)
             tabular.record('ExpertTrajectoryReward', self.expert_trajectory_reward)
             print('In finally, after tabular')
-            import pdb
-            pdb.set_trace()
+            # import pdb
+            # pdb.set_trace()
             print('In finally, after pdb')
 
         self.log_diagnostics(paths)
