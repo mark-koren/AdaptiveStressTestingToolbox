@@ -270,17 +270,24 @@ class BackwardAlgorithm(PPO):
     def train_once(self, itr, paths):
 
         try:
+            print('In try, before process samples')
             paths = self.process_samples(itr, paths)
+            print('In try, after process samples')
         except:
+            print('In except, before pdb')
             import pdb
             pdb.set_trace()
+            print('In except, after pdb')
         finally:
+            print('In finally, before tabular')
             tabular.record('ExpertTrajectoryStep', self.step_num)
             tabular.record('BAPathLength', self.expert_trajectory_last_step - self.step_num + 1)
             tabular.record('EpochsPerStep', self.epochs_per_this_step)
             tabular.record('ExpertTrajectoryReward', self.expert_trajectory_reward)
+            print('In finally, after tabular')
             import pdb
             pdb.set_trace()
+            print('In finally, after pdb')
 
         self.log_diagnostics(paths)
         logger.log('Optimizing policy...')
