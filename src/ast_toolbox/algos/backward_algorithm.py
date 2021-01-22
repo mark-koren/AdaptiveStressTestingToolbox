@@ -272,13 +272,15 @@ class BackwardAlgorithm(PPO):
         try:
             paths = self.process_samples(itr, paths)
         except:
-            import pdb;
+            import pdb
             pdb.set_trace()
         finally:
             tabular.record('ExpertTrajectoryStep', self.step_num)
             tabular.record('BAPathLength', self.expert_trajectory_last_step - self.step_num + 1)
             tabular.record('EpochsPerStep', self.epochs_per_this_step)
             tabular.record('ExpertTrajectoryReward', self.expert_trajectory_reward)
+            import pdb
+            pdb.set_trace()
 
         self.log_diagnostics(paths)
         logger.log('Optimizing policy...')
