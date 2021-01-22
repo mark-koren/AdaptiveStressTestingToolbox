@@ -17,6 +17,10 @@ import os
 
 os.sched_setaffinity(0, {i for i in range(mp.cpu_count())})
 
+def myexcepthook(exctype, value, traceback):
+    for p in mp.active_children():
+       p.terminate()
+
 def slice_dict(in_dict, slice_idx):
     """Helper function to recursively parse through a dictionary of dictionaries and arrays to slice \
     the arrays at a certain index.
@@ -199,6 +203,7 @@ class BatchSampler(BaseSampler):
             else:
 
                 print("Opening Pool with ", self.n_envs, ' processes.')
+                sys.excepthook = myexcepthook
                 pool = mp.Pool(processes=self.n_envs)
                 simulate_single_path_worker_partial = partial(simulate_single_path_worker,
                                                               self.sim.simulate,
