@@ -95,6 +95,7 @@ class BackwardAlgorithm(PPO):
         self.skip_until_step = skip_until_step
         self.expert_trajectory = expert_trajectory
         self.expert_trajectory_last_step = len(self.expert_trajectory) - 1
+        self.total_steps_taken = 0
 
         # Get initialization variables
         self.first_iteration_num = np.minimum(self.skip_until_step, self.expert_trajectory_last_step )
@@ -283,6 +284,9 @@ class BackwardAlgorithm(PPO):
             tabular.record('ExpertTrajectoryStep', self.step_num)
             tabular.record('BAPathLength', self.expert_trajectory_last_step - self.step_num + 1)
             tabular.record('EpochsPerStep', self.epochs_per_this_step)
+            tabular.record('SimStepsPerEpoch', (self.expert_trajectory_last_step - self.step_num + 1) * len(paths))
+            self.total_steps_taken += (self.expert_trajectory_last_step - self.step_num + 1) * len(paths)
+            tabular.record('TotalSimSteps', self.total_steps_taken)
             tabular.record('ExpertTrajectoryReward', self.expert_trajectory_reward)
             print('In finally, after tabular')
             # import pdb

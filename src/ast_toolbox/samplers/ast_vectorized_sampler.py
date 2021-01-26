@@ -1,9 +1,64 @@
+from functools import partial
+import multiprocessing as mp
 import numpy as np
+import os
+import sys
+
+from dowel import logger, tabular
 from garage.sampler.on_policy_vectorized_sampler import OnPolicyVectorizedSampler
 
 from ast_toolbox.rewards import ExampleAVReward
 from ast_toolbox.simulators import ExampleAVSimulator
 
+os.sched_setaffinity(0, {i for i in range(mp.cpu_count())})
+
+def myexcepthook(exctype, value, traceback):
+    for p in mp.active_children():
+       p.terminate()
+
+def slice_dict(in_dict, slice_idx):
+    """Helper function to recursively parse through a dictionary of dictionaries and arrays to slice \
+    the arrays at a certain index.
+
+    Parameters
+    ----------
+    in_dict : dict
+        Dictionary where the values are arrays or other dictionaries that follow this stipulation.
+    slice_idx : int
+        Index to slice each array at.
+
+    Returns
+    -------
+    dict
+        Dictionary where arrays at every level are sliced.
+
+    """
+    for key, value in in_dict.items():
+        # pdb.set_trace()
+        if isinstance(value, dict):
+            in_dict[key] = slice_dict(value, slice_idx)
+        else:
+            in_dict[key][slice_idx + 1:, ...] = np.zeros_like(value[slice_idx + 1:, ...])
+
+    return in_dict
+
+def simulate_single_path_worker(sim_func, slice_func, reward_func, reward_info_func, path):
+    s_0 = path["observations"][0]
+    actions = path['actions']
+
+    end_idx, info = sim_func(actions=actions, s_0=s_0)
+    if end_idx >= 0:
+        slice_func(path, end_idx)
+
+
+    rewards = reward_func(
+        action=actions[end_idx],
+        info=reward_info_func()
+    )
+    path["rewards"][end_idx] = rewards
+    path['env_infos']['cache'] = np.zeros_like(path["rewards"])
+
+    return path
 
 class ASTVectorizedSampler(OnPolicyVectorizedSampler):
     """A vectorized sampler for AST to handle open-loop simulators.
@@ -72,28 +127,48 @@ class ASTVectorizedSampler(OnPolicyVectorizedSampler):
         paths = super().obtain_samples(itr, batch_size)
         # pdb.set_trace()
         if self.open_loop:
-            for path in paths:
-                s_0 = path["observations"][0]
 
-                # actions = path['env_infos']['info']['actions']
-                actions = path['actions']
-                # pdb.set_trace()
-                end_idx, info = self.sim.simulate(actions=actions, s_0=s_0)
-                # print('----- Back from simulate: ', end_idx)
-                if end_idx >= 0:
-                    # pdb.set_trace()
-                    self.slice_dict(path, end_idx)
-                rewards = self.reward_function.give_reward(
-                    action=actions[end_idx],
-                    info=self.sim.get_reward_info()
-                )
-                # print('----- Back from rewards: ', rewards)
-                # pdb.set_trace()
-                path["rewards"][end_idx] = rewards
-                # info[:, -1] = path["rewards"][:info.shape[0]]
-                # path['env_infos']['sim_info'] = info
-                path['env_infos']['sim_info'] = np.zeros_like(path["rewards"])
-                # import pdb; pdb.set_trace()
+            print("Opening Pool with ", self.n_envs, ' processes.')
+            sys.excepthook = myexcepthook
+            pool = mp.Pool(processes=self.n_envs)
+            simulate_single_path_worker_partial = partial(simulate_single_path_worker,
+                                                          self.sim.simulate,
+                                                          slice_dict,
+                                                          self.reward_function.give_reward,
+                                                          self.sim.get_reward_info)
+            # simulate_single_path_worker(self.sim.simulate, self.slice_dict, self.reward_function.give_reward, self.sim.get_reward_info)
+            paths = pool.map(simulate_single_path_worker_partial, paths)
+            pool.close()
+            print('Pool Closed')
+
+            # for path in paths:
+            #     s_0 = path["observations"][0]
+            #
+            #     # actions = path['env_infos']['info']['actions']
+            #     actions = path['actions']
+            #     # pdb.set_trace()
+            #     end_idx, info = self.sim.simulate(actions=actions, s_0=s_0)
+            #     # print('----- Back from simulate: ', end_idx)
+            #     if end_idx >= 0:
+            #         # pdb.set_trace()
+            #         self.slice_dict(path, end_idx)
+            #     rewards = self.reward_function.give_reward(
+            #         action=actions[end_idx],
+            #         info=self.sim.get_reward_info()
+            #     )
+            #     # print('----- Back from rewards: ', rewards)
+            #     # pdb.set_trace()
+            #     path["rewards"][end_idx] = rewards
+            #     # info[:, -1] = path["rewards"][:info.shape[0]]
+            #     # path['env_infos']['sim_info'] = info
+            #     path['env_infos']['sim_info'] = np.zeros_like(path["rewards"])
+            #     # import pdb; pdb.set_trace()
+
+        total_steps = 0
+        for path in paths:
+            total_steps += path['actions'].shape[0]
+
+        tabular.record('TotalSteps', total_steps)
 
         return paths
 
