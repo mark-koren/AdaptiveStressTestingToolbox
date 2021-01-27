@@ -204,17 +204,32 @@ class BatchSampler(BaseSampler):
 
                 print("Opening Pool with ", self.n_envs, ' processes.')
                 sys.excepthook = myexcepthook
-                pool = mp.Pool(processes=self.n_envs)
+                # pool = mp.Pool(processes=self.n_envs)
                 simulate_single_path_worker_partial = partial(simulate_single_path_worker,
                                                               self.sim.simulate,
                                                               slice_dict,
                                                               self.reward_function.give_reward,
                                                               self.sim.get_reward_info)
                 # simulate_single_path_worker(self.sim.simulate, self.slice_dict, self.reward_function.give_reward, self.sim.get_reward_info)
-                paths = pool.map(simulate_single_path_worker_partial, paths)
-                pool.close()
-                print('Pool Closed')
+                # paths = pool.map(simulate_single_path_worker_partial, paths)
+                # pool.close()
+                # print('Pool Closed')
 
+                from pebble import ProcessPool
+                from concurrent.futures import TimeoutError
+                with ProcessPool() as pool:
+                    future = pool.map(simulate_single_path_worker_partial, paths, timeout=300)
+
+                    iterator = future.result()
+                    paths = []
+
+                    while True:
+                        try:
+                            paths.append(next(iterator))
+                        except StopIteration:
+                            break
+                        except TimeoutError as error:
+                            print("THREAD TIMEOUT: function took longer than %d seconds" % error.args[1])
 
                 # for path in paths:
                 #     s_0 = path["observations"][0]
