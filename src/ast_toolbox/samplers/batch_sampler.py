@@ -15,7 +15,8 @@ import sys
 from os import getpid
 import os
 
-os.sched_setaffinity(0, {i for i in range(mp.cpu_count())})
+# os.sched_setaffinity(0, {i for i in range(mp.cpu_count())})
+os.sched_setaffinity(0, {i for i in range(16)})
 
 def myexcepthook(exctype, value, traceback):
     for p in mp.active_children():
