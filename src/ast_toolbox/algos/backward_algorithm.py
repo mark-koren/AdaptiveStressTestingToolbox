@@ -63,6 +63,7 @@ class BackwardAlgorithm(PPO):
                  epochs_per_step=10,
                  max_epochs=None,
                  skip_until_step = 0,
+                 skip_every_step = 3,
                  scope=None,
                  max_path_length=500,
                  discount=0.99,
@@ -88,6 +89,7 @@ class BackwardAlgorithm(PPO):
         #         optimizer_args = dict()
 
         self.max_epochs_per_step = epochs_per_step
+        self.skip_every_step = skip_every_step
         # self.max_steps = len(expert_trajectory)
         # self.skip_until_step = int(.5 * self.max_steps)
         # Input settings related to expert trajectory
@@ -258,7 +260,8 @@ class BackwardAlgorithm(PPO):
                     max_final_reward = np.sum(path['rewards'])
 
             # We have beat the expert trajectory from this step, back up or end
-            if max_reward_this_step >= self.expert_trajectory_reward:
+            # if max_reward_this_step >= self.expert_trajectory_reward: # Only move if improved
+            if max_reward_this_step >= -1000: # Move forward if any failure found
                 if self.step_num == 0:
                     self.done = True
                 else:
@@ -322,10 +325,13 @@ class BackwardAlgorithm(PPO):
                     else:
                         # Back up the algorithm to the next step of the expert trajectory
                         self.epochs_per_this_step = 0
+
+                        iteration_num = np.minimum(iteration_num + 1 + self.skip_every_step, self.num_steps - 1)
+                        next_step = np.maximum(0, self.expert_trajectory_last_step - iteration_num)
                         print('------------ Backward Algorithm: Stepping Back from Step: ', self.step_num, ' to Step: ',
-                              np.maximum(0, self.expert_trajectory_last_step - np.minimum(iteration_num + 1, self.num_steps - 1)), ' ------------------')
-                        iteration_num = np.minimum(iteration_num + 1, self.num_steps - 1)
-                        self.step_num = np.maximum(0, self.expert_trajectory_last_step - iteration_num)
+                              next_step, ' ------------------')
+
+                        self.step_num = next_step
                         # print(self.step_num)
 
                         self.set_env_to_expert_trajectory_step()
